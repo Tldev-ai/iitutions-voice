@@ -1,0 +1,12 @@
+{
+    "type": "service_account",
+    "project_id": "intrepid-pager-470514-c6",
+    "private_key_id": "3e22a0ccec3e8d693ff2357ce571c2ba748b5950",
+    "client_id": "116636634623086778725",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/iituitions-saras-sheets%40intrepid-pager-470514-c6.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+  }
+  
