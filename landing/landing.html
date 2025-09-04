@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>iiTuitions Saras - AI Tuition Assistant</title>
+  <link rel="icon" type="image/png" href="./logo.png?v=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .chat-bubble { animation: slideUp .25s ease-out; }
+    @keyframes slideUp { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform: translateY(0);} }
+    .whatsapp-fab { position: fixed; right: 12px; bottom: 16px; z-index: 60; }
+    .safe-top{padding-top:env(safe-area-inset-top)} .safe-bot{padding-bottom:env(safe-area-inset-bottom)}
+    .h-svh{height:100svh}
+    .chip{border:1px solid rgba(0,0,0,.08); background:#fff;}
+    .chip:hover{background:#f3f4f6}
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-40 safe-top">
+    <div class="max-w-7xl mx-auto px-3 py-2 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <img src="./logo.png" alt="iiTuitions logo" class="h-8 w-auto">
+        <span class="text-lg font-bold text-gray-800">Saras</span>
+      </div>
+      <button id="langBtn" class="text-sm px-3 py-1 rounded-lg border hover:bg-gray-50">
+        🌐 Language
+      </button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-4xl mx-auto px-3 py-6">
+    <div class="text-center mb-6">
+      <h1 class="text-3xl md:text-5xl font-bold text-gray-800 mb-3">Find Perfect Tutors with iiTuitions</h1>
+      <p class="text-base text-gray-600 mb-2">🎯 Personalized matching • 📚 All subjects • 🏠 Home & Online</p>
+      <p class="text-sm text-gray-500">తెలుగు, हिन्दी & English లో మాట్లాడండి</p>
+    </div>
+
+    <div class="grid md:grid-cols-1 gap-4 mb-8 max-w-2xl mx-auto">
+      <button onclick="openChatDrawer()" class="bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-5 px-8 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+        <div class="flex items-center justify-center space-x-3">
+          <span class="text-3xl">💬</span>
+          <div>
+            <div class="text-xl font-bold">Chat with Saras</div>
+            <div class="text-sm opacity-90">Our AI Agent will help you get a perfect tutor quickly</div>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-md p-5">
+      <h2 class="text-xl font-bold text-gray-800 mb-3">Frequently Asked Questions</h2>
+      <details class="border-b pb-2">
+        <summary class="cursor-pointer font-semibold text-gray-700">How does Saras work?</summary>
+        <p class="mt-1 text-gray-600 text-sm">Chat, share your requirements, and get matched with a 1-on-1 tutor.</p>
+      </details>
+      <details class="border-b pb-2 mt-2">
+        <summary class="cursor-pointer font-semibold text-gray-700">తెలుగులో మాట్లాడవచ్చా?</summary>
+        <p class="mt-1 text-gray-600 text-sm">అవును! తెలుగు, हिन्दी & English సపోర్ట్ చేస్తుంది.</p>
+      </details>
+      <details class="mt-2">
+        <summary class="cursor-pointer font-semibold text-gray-700">क्या हिन्दी में बात कर सकते हैं?</summary>
+        <p class="mt-1 text-gray-600 text-sm">हाँ! हम हिन्दी, తెలుగు और English—तीनों में बात करते हैं।</p>
+      </details>
+      <p id="globalStatus" class="text-xs text-gray-500 mt-3"></p>
+    </div>
+  </main>
+
+  <!-- Chat widget -->
+  <div id="chatDrawer" class="fixed inset-0 z-50 pointer-events-none">
+    <div id="chatPanel"
+      class="absolute inset-0 md:inset-auto md:right-4 md:bottom-28
+             w-full h-full md:w-[400px] md:h-[78vh]
+             bg-white rounded-none md:rounded-2xl shadow-none md:shadow-2xl
+             pointer-events-auto transform translate-x-full
+             transition-transform duration-300">
+      <div class="flex flex-col h-svh md:h-full">
+        <div class="bg-blue-500 text-white p-4 flex justify-between items-center safe-top md:rounded-t-2xl">
+          <h3 class="text-lg font-bold">Chat with Saras</h3>
+          <button onclick="closeChatDrawer()" class="text-white text-xl px-2" aria-label="Close">✖</button>
+        </div>
+
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50"></div>
+
+        <!-- Quick replies -->
+        <div id="quickReplies" class="px-3 pb-1 pt-0 bg-gray-50 hidden">
+          <div id="quickWrap" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="border-t bg-white p-3 safe-bot md:rounded-b-2xl">
+          <div class="flex gap-2">
+            <input id="chatInput" type="text" enterkeyhint="send"
+                   placeholder="Type your message…"
+                   class="flex-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="sendBtn" onclick="sendChatMessage()"
+                    class="bg-blue-500 text-white px-4 py-3 rounded-xl">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Button -->
+  <div class="whatsapp-fab">
+    <a id="waLink" href="#" target="_blank" rel="noopener noreferrer"
+       class="flex items-center space-x-2 rounded-full shadow-lg px-4 py-3 text-white font-semibold"
+       style="background-color:#25D366;">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 32 32" fill="currentColor"><path d="M19.11 17.24c-.27-.14-1.6-.79-1.85-.88-.25-.09-.43-.14-.61.14-.18.27-.7.88-.86 1.06-.16.18-.32.2-.59.07-.27-.14-1.15-.42-2.2-1.33-.81-.72-1.36-1.6-1.52-1.87-.16-.27-.02-.41.12-.55.12-.12.27-.32.41-.47.14-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.48-.84-2.03-.22-.53-.45-.45-.61-.46h-.52c-.18 0-.48.07-.73.34-.25.27-.96.94-.96 2.28s.99 2.64 1.13 2.82c.14.18 1.96 2.99 4.74 4.18.66.28 1.18.45 1.58.58.66.21 1.26.18 1.73.11.53-.08 1.6-.65 1.83-1.27.23-.62.23-1.16.16-1.27-.07-.11-.25-.18-.52-.32zM16.02 3C9.92 3 5 7.91 5 13.99c0 2.47.82 4.75 2.22 6.58L6 29l8.62-1.8c1.75.57 3.62.88 5.56.88 6.1 0 11.02-4.91 11.02-10.99C31.2 7.91 26.12 3 20.18 3h-4.16z"/></svg>
+      <span>Back to WhatsApp</span>
+    </a>
+  </div>
+
+  <script>
+    // Same-origin API (backend serves this page)
+    const API_BASE = ''; // http://127.0.0.1:<PORT>
+    const WHATSAPP_LINK = 'https://wa.me/919010031000?text=Hi%20iiTuitions%20Saras%20team%2C%20I%20want%20to%20chat.';
+    document.addEventListener('DOMContentLoaded', () => {
+      const wa = document.getElementById('waLink'); if (wa) wa.href = WHATSAPP_LINK;
+      document.getElementById('langBtn').addEventListener('click', () => changeLanguage());
+    });
+
+    // === Language texts ===
+    const FIRST_MSG = {
+      en: "Please choose your preferred language:",
+      hi: "कृपया अपनी भाषा चुनें:",
+      te: "మీరు మాట్లాడటానికి ఇష్టపడే భాషను ఎంచుకోండి:"
+    };
+    const WELCOME_BY_LANG = {
+      en: "Great! I’ll continue in English.\nWe provide 1-on-1 tuitions: Online (Zoom) or Offline Home Tuition. We cover IIT-JEE/NEET (Gr 11–12), SAT (Gr 9–12), IIT-Foundation (from Gr 6), NTSE/Olympiads and school subjects.",
+      hi: "ठीक है! मैं हिन्दी में जारी रखूँगी/गा।\nहम 1-on-1 ट्यूशन देते हैं: Online (Zoom) या Offline Home Tuition. हम IIT-JEE/NEET (कक्षा 11–12), SAT (9–12), IIT-Foundation (6 से), NTSE/Olympiads और स्कूल विषय कवर करते हैं।",
+      te: "సరే! ఇకపై తెలుగులో మాట్లాడుతాను.\nమేము 1-on-1 ట్యూషన్లు ఇస్తాం: Online (Zoom) లేదా Offline Home Tuition. IIT-JEE/NEET (11–12), SAT (9–12), IIT-Foundation (6వ నుండి), NTSE/Olympiads మరియు స్కూల్ సబ్జెక్ట్స్ కవర్ చేస్తాం."
+    };
+
+    // === Utilities ===
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function detectLang(text){
+      if (/[\u0C00-\u0C7F]/.test(text)) return 'te';
+      if (/[\u0900-\u097F]/.test(text)) return 'hi';
+      return 'en';
+    }
+    const genConvId = () => Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+
+    // Conversation + language (fresh each drawer open)
+    let CONV_ID = genConvId();
+    let LANG_PREF = '';                  // always ask on open
+
+    // Chat state
+    let chatMessages = [];
+    const MAX_HISTORY = 8;
+    let IS_SENDING = false;              // in-flight lock
+
+    // DOM helpers
+    const box = () => document.getElementById('chatMessages');
+    function pushBot(text){
+      const d = document.createElement('div');
+      d.className = 'chat-bubble bg-white p-3 rounded-xl max-w-[95%] md:max-w-[90%] shadow';
+      d.innerHTML = `<p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(text)}</p>`;
+      box().appendChild(d); box().scrollTop = box().scrollHeight;
+      logMessage('assistant', text);
+    }
+    function pushTyping(){
+      const a = document.createElement('div');
+      a.className = 'chat-bubble bg-white p-3 rounded-xl max-w-[95%] md:max-w-[90%] shadow';
+      a.innerHTML = `<span class="text-gray-500">Saras is typing…</span>`;
+      box().appendChild(a); box().scrollTop = box().scrollHeight;
+      return a;
+    }
+    function pushUser(text){
+      const u = document.createElement('div');
+      u.className = 'chat-bubble bg-blue-500 text-white p-3 rounded-xl max-w-[95%] md:max-w-[90%] ml-auto';
+      u.textContent = text; box().appendChild(u); box().scrollTop = box().scrollHeight;
+      logMessage('user', text);
+    }
+
+    // Quick replies
+    function showQuickReplies(labelsAndValues){
+      const wrap = document.getElementById('quickWrap');
+      const host = document.getElementById('quickReplies');
+      wrap.innerHTML = '';
+      labelsAndValues.forEach(([label, value])=>{
+        const b = document.createElement('button');
+        b.className='chip px-3 py-1.5 rounded-full text-sm';
+        b.textContent = label;
+        b.onclick = () => { if (IS_SENDING) return; host.classList.add('hidden'); sendChatMessage(value); };
+        wrap.appendChild(b);
+      });
+      if (labelsAndValues.length) host.classList.remove('hidden');
+    }
+    function hideQuickReplies(){ document.getElementById('quickReplies').classList.add('hidden'); }
+
+    // Reset conversation and show language prompt
+    function startNewChat(){
+      CONV_ID = genConvId();
+      LANG_PREF = '';
+      chatMessages = [];
+      IS_SENDING = false;
+      hideQuickReplies();
+      box().innerHTML = '';
+      pushBot(`${FIRST_MSG.en}\n\n[English] [हिन्दी] [తెలుగు]`);
+      showQuickReplies([
+        ['English','English'], ['हिन्दी','हिन्दी'], ['తెలుగు','తెలుగు']
+      ]);
+    }
+
+    // Drawer controls
+    function openChatDrawer(){
+      const panel = document.getElementById('chatPanel');
+      panel.classList.remove('translate-x-full');
+      document.getElementById('chatDrawer').classList.remove('pointer-events-none');
+      startNewChat(); // ALWAYS ask language on open
+    }
+    function closeChatDrawer(){
+      const panel = document.getElementById('chatPanel');
+      panel.classList.add('translate-x-full');
+      document.getElementById('chatDrawer').classList.add('pointer-events-none');
+    }
+    window.openChatDrawer = openChatDrawer;
+    window.closeChatDrawer = closeChatDrawer;
+
+    // Change language anytime via header button
+    function changeLanguage(){
+      if (document.getElementById('chatDrawer').classList.contains('pointer-events-none')) {
+        openChatDrawer();
+      } else {
+        startNewChat();
+      }
+    }
+
+    // Handle language capture
+    function maybeCaptureLanguage(text){
+      const t = (text||'').trim();
+      if (LANG_PREF) return false;
+      if (/^english$/i.test(t)) LANG_PREF='en';
+      else if (/^(हिन्दी|हिंदी|hindi)$/i.test(t)) LANG_PREF='hi';
+      else if (/^(తెలుగు|telugu)$/i.test(t)) LANG_PREF='te';
+      else return false;
+
+      pushBot(WELCOME_BY_LANG[LANG_PREF]);
+      showQuickReplies([
+        ['Online (Zoom)','Online (Zoom)'], ['Offline Home','Offline Home'],
+        ['IIT-JEE','IIT-JEE'], ['NEET','NEET'], ['SAT','SAT'],
+        ['IIT-Foundation','IIT-Foundation']
+      ]);
+      return true;
+    }
+
+    // Send message (optionally with preset text)
+    async function sendChatMessage(presetText) {
+      if (IS_SENDING) return;
+      const input = document.getElementById('chatInput');
+      const btn   = document.getElementById('sendBtn');
+      const text  = (presetText ?? input.value).trim();
+      if (!text) return;
+
+      IS_SENDING = true;
+
+      hideQuickReplies();
+      pushUser(text);
+
+      const typing = pushTyping();
+      const lang = LANG_PREF || detectLang(text);
+
+      input.value=''; input.disabled=true; btn.disabled=true;
+
+      chatMessages.push({ role:'user', content:text });
+      const history = chatMessages.slice(-MAX_HISTORY);
+
+      try {
+        if (maybeCaptureLanguage(text)) {
+          typing.remove();                          // language welcome already printed
+        } else {
+          const reply = await getReply(history, lang);
+          const clean = reply || 'Sorry, I could not respond right now.';
+          typing.innerHTML = `<p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(clean)}</p>`;
+          chatMessages.push({ role:'assistant', content: clean });
+        }
+      } catch (e) {
+        typing.innerHTML = `<p class="text-red-600">Sorry, something went wrong. Please try again.</p>`;
+        logMessage('error', String(e));
+      } finally {
+        input.disabled=false; btn.disabled=false; input.focus();
+        box().scrollTop = box().scrollHeight;
+        IS_SENDING = false;
+      }
+    }
+    window.sendChatMessage = sendChatMessage;
+
+    // Streaming first, fallback to JSON
+    async function getReply(history, lang){
+      const payload = {
+        convId: CONV_ID,
+        messages: history,
+        lang: LANG_PREF || lang,
+        page: location.pathname,
+        userAgent: navigator.userAgent
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/chat_stream`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'text/event-stream'},
+          body: JSON.stringify(payload)
+        });
+        const ct = res.headers.get('content-type')||'';
+        if (res.ok && (ct.includes('event-stream')||ct.includes('ndjson')||ct.includes('text/plain'))) {
+          const reader = res.body.getReader(); const dec = new TextDecoder(); let acc='';
+          const a = document.querySelector('#chatMessages > div:last-child');
+          for(;;){
+            const {value,done}=await reader.read(); if(done)break;
+            let chunk = dec.decode(value,{stream:true});
+            chunk.split(/\r?\n/).forEach(line=>{
+              const m = line.match(/^data:\s*(.*)$/); let t = m?m[1]:line;
+              try{ const o=JSON.parse(t); if(o.delta) t=o.delta; if(o.reply) t=o.reply; }catch{}
+              if (t && !t.startsWith(':')) acc+=t;
+            });
+            a.innerHTML = `<p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(acc)}</p>`;
+          }
+          if(acc.trim()) return acc;
+        }
+      } catch {}
+      const r = await fetch(`${API_BASE}/chat`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const j = await r.json(); return j.reply;
+    }
+
+    // Logging to backend / Sheets
+    async function logMessage(role, text){
+      try{
+        await fetch(`${API_BASE}/tool/log_message`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            conversationId: CONV_ID,
+            role, text, lang: LANG_PREF || detectLang(text),
+            page: location.pathname, userAgent: navigator.userAgent
+          })
+        });
+      }catch{}
+    }
+
+    // Enter to send
+    document.addEventListener('keyup', (e)=>{
+      if (e.key === 'Enter' && (e.target.id === 'chatInput')) sendChatMessage();
+    });
+  </script>
+</body>
+</html>
